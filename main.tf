@@ -33,12 +33,13 @@ resource "aws_mq_configuration" "rabbitmq " {
 }
 
 resource "aws_mq_broker" "rabbitmq" {
-  broker_name     = "${var.env}-rabbitmq"
-  deployment_mode = "SINGLE_INSTANCE"
+  broker_name        = "${var.env}-rabbitmq"
+  deployment_mode    = var.deployment_mode
   engine_type        = "ActiveMQ"
   engine_version     = "5.15.9"
   host_instance_type = var.host_instance_type
   security_groups    = [aws_security_group.rabbitmq.id]
+  subnet_ids         = var.deployment_mode == "SINGLE_INSTANCE" ? [var.subnet_ids[0]]
 
   configuration {
     id       = aws_mq_configuration.rabbitmq.id
@@ -46,8 +47,8 @@ resource "aws_mq_broker" "rabbitmq" {
   }
 
   encryption_options {
-    kms_key_id        = ""
     use_aws_owned_key = false
+    kms_key_id        = data.aws_kms_key.key.arn
   }
 
   user {
